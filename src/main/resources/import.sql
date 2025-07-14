@@ -1,0 +1,2 @@
+-- Insert: user admin
+INSERT INTO client (name, email, password, phone, role, created_at, updated_at) VALUES('Usuário administrador', 'admin', '$2a$10$MYWChDsHdPTUSWvqQ2mxZ.pTpm654bnw/qQypDij3e6UjkB5Qz3GG', '', 'ADMIN', NOW(), NOW());
