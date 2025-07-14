@@ -10,16 +10,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping(value = "/client")
@@ -40,13 +42,16 @@ public class ClientResource {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<ClientDTO>> findAll(
-            @Parameter(description = "Número da página", example = "0") @RequestParam(value = "page", defaultValue = "0") Integer page,
-            @Parameter(description = "Tamanho da página", example = "10") @RequestParam(value = "size", defaultValue = "10") Integer size,
-            @Parameter(description = "Direção da ordenação (ASC ou DESC)", example = "ASC") @RequestParam(value = "direction", defaultValue = "ASC") String direction,
-            @Parameter(description = "Campo para ordenação", example = "id") @RequestParam(value = "orderBy", defaultValue = "id") String orderBy
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(value = "direction", defaultValue = "ASC") String direction,
+            @RequestParam(value = "orderBy", defaultValue = "id") String orderBy
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.valueOf(direction), orderBy);
         Page<ClientDTO> clients = clientService.findAll(pageable);
+
+        clients.forEach(this::addHateoasLinks);
+
         return ResponseEntity.ok().body(clients);
     }
 
@@ -64,6 +69,7 @@ public class ClientResource {
     public ResponseEntity<ClientDTO> findById(
             @Parameter(description = "ID do cliente", example = "1") @PathVariable Long id) {
         ClientDTO client = clientService.findById(id);
+        addHateoasLinks(client);
         return ResponseEntity.ok().body(client);
     }
 
@@ -85,8 +91,10 @@ public class ClientResource {
                     content = @Content(schema = @Schema(implementation = ClientDTO.class))
             )
             @RequestBody ClientDTO clientDTO) {
-        clientDTO.setPassword(clientDTO.getPhone()); // regra específica da sua lógica
+        clientDTO.setPassword(clientDTO.getPhone()); // regra de negócio
         ClientDTO newClient = clientService.insert(clientDTO);
+        addHateoasLinks(newClient);
+
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(newClient.getId()).toUri();
         return ResponseEntity.created(uri).body(newClient);
@@ -112,6 +120,7 @@ public class ClientResource {
             )
             @RequestBody ClientDTO clientDTO) {
         ClientDTO updatedClient = clientService.update(id, clientDTO);
+        addHateoasLinks(updatedClient);
         return ResponseEntity.ok().body(updatedClient);
     }
 
@@ -125,9 +134,17 @@ public class ClientResource {
     )
     @DeleteMapping(value = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<String> delete(
             @Parameter(description = "ID do cliente", example = "1") @PathVariable Long id) {
         clientService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Cliente deletado com sucesso.");
+    }
+
+    private void addHateoasLinks(ClientDTO client) {
+        client.add(linkTo(methodOn(ClientResource.class).findById(client.getId())).withSelfRel());
+        client.add(linkTo(methodOn(ClientResource.class).findAll(0, 10, "ASC", "id")).withRel("list"));
+        client.add(linkTo(methodOn(ClientResource.class).update(client.getId(), null)).withRel("update"));
+        client.add(linkTo(methodOn(ClientResource.class).delete(client.getId())).withRel("delete"));
+        client.add(linkTo(methodOn(ClientResource.class).insert(null)).withRel("insert"));
     }
 }
