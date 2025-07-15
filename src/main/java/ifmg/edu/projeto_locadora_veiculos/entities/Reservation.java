@@ -36,8 +36,7 @@ public class Reservation implements Serializable {
 
     public Reservation() {}
 
-    public Reservation(long id, Client client, Vehicle vehicle, Instant startDate, Instant endDate) {
-        this.id = id;
+    public Reservation(Client client, Vehicle vehicle, Instant startDate, Instant endDate) {
         this.client = client;
         this.vehicle = vehicle;
         this.startDate = startDate;

@@ -13,13 +13,13 @@ public class ReservationDTO extends RepresentationModel<ReservationDTO> {
     @Schema(description = "ID da reserva gerado pelo banco de dados")
     private long id;
 
-    @Schema(description = "Cliente que realizou a reserva")
-    @NotNull(message = "O cliente é obrigatório")
-    private ClientDTO client;
+    @Schema(description = "ID do cliente associado à reserva", example = "1", required = true)
+    @NotNull(message = "O ID do cliente é obrigatório")
+    private Long clientId;
 
-    @Schema(description = "Veículo reservado")
-    @NotNull(message = "O veículo é obrigatório")
-    private VehicleDTO vehicle;
+    @Schema(description = "ID do veículo associado à reserva", example = "10", required = true)
+    @NotNull(message = "O ID do veículo é obrigatório")
+    private Long vehicleId;
 
     @Schema(description = "Data de início da reserva")
     @NotNull(message = "A data de início é obrigatória")
@@ -31,17 +31,10 @@ public class ReservationDTO extends RepresentationModel<ReservationDTO> {
 
     public ReservationDTO() {}
 
-    public ReservationDTO(ClientDTO client, VehicleDTO vehicle, Instant startDate, Instant endDate) {
-        this.client = client;
-        this.vehicle = vehicle;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
-
     public ReservationDTO(Reservation reservation) {
         this.id = reservation.getId();
-        this.client = new ClientDTO(reservation.getClient());
-        this.vehicle = new VehicleDTO(reservation.getVehicle());
+        this.clientId = reservation.getClient().getId();
+        this.vehicleId = reservation.getVehicle().getId();
         this.startDate = reservation.getStartDate();
         this.endDate = reservation.getEndDate();
     }
@@ -54,20 +47,20 @@ public class ReservationDTO extends RepresentationModel<ReservationDTO> {
         this.id = id;
     }
 
-    public ClientDTO getClient() {
-        return client;
+    public Long getClientId() {
+        return clientId;
     }
 
-    public void setClient(ClientDTO client) {
-        this.client = client;
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
     }
 
-    public VehicleDTO getVehicle() {
-        return vehicle;
+    public Long getVehicleId() {
+        return vehicleId;
     }
 
-    public void setVehicle(VehicleDTO vehicle) {
-        this.vehicle = vehicle;
+    public void setVehicleId(Long vehicleId) {
+        this.vehicleId = vehicleId;
     }
 
     public Instant getStartDate() {
@@ -101,8 +94,8 @@ public class ReservationDTO extends RepresentationModel<ReservationDTO> {
     public String toString() {
         return "ReservationDTO{" +
                 "id=" + id +
-                ", client=" + client +
-                ", vehicle=" + vehicle +
+                ", clientId=" + clientId +
+                ", vehicleId=" + vehicleId +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
                 '}';

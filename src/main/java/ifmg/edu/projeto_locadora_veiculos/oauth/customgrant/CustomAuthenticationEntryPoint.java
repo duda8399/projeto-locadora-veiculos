@@ -1,4 +1,4 @@
-package ifmg.edu.projeto_locadora_veiculos.oauth;
+package ifmg.edu.projeto_locadora_veiculos.oauth.customgrant;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

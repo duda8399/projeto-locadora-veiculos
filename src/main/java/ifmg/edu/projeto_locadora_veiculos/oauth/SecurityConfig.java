@@ -1,5 +1,6 @@
 package ifmg.edu.projeto_locadora_veiculos.oauth;
 
+import ifmg.edu.projeto_locadora_veiculos.oauth.customgrant.CustomAuthenticationEntryPoint;
 import ifmg.edu.projeto_locadora_veiculos.services.ClientUserDetailsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
