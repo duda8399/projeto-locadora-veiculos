@@ -114,7 +114,7 @@ public class ReservationResource {
     )
     @PutMapping(value = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ReservationDTO> update(
+    public ResponseEntity<ApiResponseDTO<ReservationDTO>> update(
             @Parameter(description = "ID da reserva", example = "1") @PathVariable Long id,
             @RequestBody(
                     description = "Novos dados da reserva",
@@ -124,7 +124,13 @@ public class ReservationResource {
             @org.springframework.web.bind.annotation.RequestBody ReservationDTO dto) {
         ReservationDTO updated = reservationService.update(id, dto);
         addHateoasLinks(updated);
-        return ResponseEntity.ok().body(updated);
+
+        ApiResponseDTO<ReservationDTO> response = new ApiResponseDTO<>(
+                "Reserva atualizada com sucesso!",
+                updated
+        );
+
+        return ResponseEntity.ok().body(response);
     }
 
     @Operation(
@@ -137,10 +143,15 @@ public class ReservationResource {
     )
     @DeleteMapping(value = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> delete(
+    public ResponseEntity<ApiResponseDTO<String>> delete(
             @Parameter(description = "ID da reserva", example = "1") @PathVariable Long id) {
         reservationService.delete(id);
-        return ResponseEntity.ok("Reserva deletada com sucesso.");
+        ApiResponseDTO<String> response = new ApiResponseDTO<>(
+                "Reserva deletada com sucesso!",
+                null
+        );
+
+        return ResponseEntity.ok().body(response);
     }
 
     private void addHateoasLinks(ReservationDTO reservation) {
