@@ -26,11 +26,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     );
 
     List<Reservation> findByClientId(Long clientId);
-
-    @Query("SELECT r FROM Reservation r WHERE r.client.id = :clientId ORDER BY r.vehicle.dailyValue DESC")
-    List<Reservation> findTopByClientIdOrderByVehicleDailyValueDesc(@Param("clientId") Long clientId);
-
-    @Query("SELECT r FROM Reservation r WHERE r.client.id = :clientId ORDER BY r.vehicle.dailyValue ASC")
-    List<Reservation> findTopByClientIdOrderByVehicleDailyValueAsc(@Param("clientId") Long clientId);
 }
 

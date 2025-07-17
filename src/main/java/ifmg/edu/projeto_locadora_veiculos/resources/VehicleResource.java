@@ -1,5 +1,6 @@
 package ifmg.edu.projeto_locadora_veiculos.resources;
 
+import ifmg.edu.projeto_locadora_veiculos.dto.ApiResponseDTO;
 import ifmg.edu.projeto_locadora_veiculos.dto.VehicleDTO;
 import ifmg.edu.projeto_locadora_veiculos.services.VehicleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,21 +61,32 @@ public class VehicleResource {
     @Operation(summary = "Inserir veículo", description = "Adiciona um novo veículo")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<VehicleDTO> insert(@RequestBody VehicleDTO dto) {
+    public ResponseEntity<ApiResponseDTO<VehicleDTO>> insert(@RequestBody VehicleDTO dto) {
         VehicleDTO newDto = vehicleService.insert(dto);
         addHateoasLinks(newDto);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(newDto.getId()).toUri();
-        return ResponseEntity.created(uri).body(newDto);
+
+        ApiResponseDTO<VehicleDTO> response = new ApiResponseDTO<>(
+                "Veículo criado com sucesso!",
+                newDto
+        );
+
+        return ResponseEntity.created(uri).body(response);
     }
 
     @Operation(summary = "Atualizar veículo", description = "Atualiza um veículo existente")
     @PutMapping(value = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<VehicleDTO> update(@PathVariable Long id, @RequestBody VehicleDTO dto) {
+    public ResponseEntity<ApiResponseDTO<VehicleDTO>> update(@PathVariable Long id, @RequestBody VehicleDTO dto) {
         VehicleDTO updatedDto = vehicleService.update(id, dto);
         addHateoasLinks(updatedDto);
-        return ResponseEntity.ok(updatedDto);
+        ApiResponseDTO<VehicleDTO> response = new ApiResponseDTO<>(
+                "Veículo atualizado com sucesso!",
+                updatedDto
+        );
+
+        return ResponseEntity.ok().body(response);
     }
 
     @Operation(summary = "Deletar veículo", description = "Remove um veículo do sistema")

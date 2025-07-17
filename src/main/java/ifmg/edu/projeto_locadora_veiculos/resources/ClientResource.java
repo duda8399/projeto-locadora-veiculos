@@ -1,5 +1,6 @@
 package ifmg.edu.projeto_locadora_veiculos.resources;
 
+import ifmg.edu.projeto_locadora_veiculos.dto.ApiResponseDTO;
 import ifmg.edu.projeto_locadora_veiculos.dto.ClientDTO;
 import ifmg.edu.projeto_locadora_veiculos.services.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -84,7 +85,7 @@ public class ClientResource {
     )
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ClientDTO> insert(
+    public ResponseEntity<ApiResponseDTO<ClientDTO>> insert(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Dados do novo cliente",
                     required = true,
@@ -97,7 +98,12 @@ public class ClientResource {
 
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(newClient.getId()).toUri();
-        return ResponseEntity.created(uri).body(newClient);
+        ApiResponseDTO<ClientDTO> response = new ApiResponseDTO<>(
+                "Cliente criado com sucesso!",
+                newClient
+        );
+
+        return ResponseEntity.created(uri).body(response);
     }
 
     @Operation(
@@ -111,7 +117,7 @@ public class ClientResource {
     )
     @PutMapping(value = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ClientDTO> update(
+    public ResponseEntity<ApiResponseDTO<ClientDTO>> update(
             @Parameter(description = "ID do cliente", example = "1") @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Dados atualizados do cliente",
@@ -121,7 +127,12 @@ public class ClientResource {
             @RequestBody ClientDTO clientDTO) {
         ClientDTO updatedClient = clientService.update(id, clientDTO);
         addHateoasLinks(updatedClient);
-        return ResponseEntity.ok().body(updatedClient);
+        ApiResponseDTO<ClientDTO> response = new ApiResponseDTO<>(
+                "Cliente atualizado com sucesso!",
+                updatedClient
+        );
+
+        return ResponseEntity.ok().body(response);
     }
 
     @Operation(

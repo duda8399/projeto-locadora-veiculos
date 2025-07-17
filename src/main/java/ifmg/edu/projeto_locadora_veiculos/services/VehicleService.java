@@ -1,6 +1,7 @@
 package ifmg.edu.projeto_locadora_veiculos.services;
 
 import ifmg.edu.projeto_locadora_veiculos.dto.VehicleDTO;
+import ifmg.edu.projeto_locadora_veiculos.entities.Client;
 import ifmg.edu.projeto_locadora_veiculos.entities.Vehicle;
 import ifmg.edu.projeto_locadora_veiculos.repositories.VehicleRepository;
 import ifmg.edu.projeto_locadora_veiculos.services.exceptions.DatabaseException;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -75,6 +78,25 @@ public class VehicleService {
         entity.setDescription(dto.getDescription());
         entity.setImgUrl(dto.getImgUrl());
         entity.setDailyValue(dto.getDailyValue());
+    }
+
+    public List<String> vehicleList() {
+        List<Vehicle> vehicles = vehicleRepository.findAll();
+
+        return vehicles.stream()
+                .map(v -> String.format(
+                        "Carro - Placa: %s  - Modelo: %s - Marca: %s - Cor: %s - Ano: %s",
+                        safe(v.getPlate()),
+                        safe(v.getModel()),
+                        safe(v.getBrand()),
+                        safe(v.getColor()),
+                        safe(v.getYear())
+                ))
+                .toList();
+    }
+
+    private String safe(String value) {
+        return value == null ? "N/A" : value;
     }
 }
 

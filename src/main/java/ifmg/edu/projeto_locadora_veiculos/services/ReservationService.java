@@ -10,6 +10,7 @@ import ifmg.edu.projeto_locadora_veiculos.repositories.VehicleRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,12 +19,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @Service
 public class ReservationService {
 
@@ -125,19 +129,22 @@ public class ReservationService {
     }
 
     public List<String> reservationList() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        ZoneId zoneId = ZoneId.systemDefault();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneOffset.UTC);
 
         List<Reservation> reservations = reservationRepository.findAll();
 
         return reservations.stream()
-                .map(c -> {
-                    LocalDateTime checkInDate = LocalDateTime.ofInstant(c.getStartDate(), zoneId);
-                    return String.format("Estadia: - Código: %d  - Cliente: %s - Veículo: %s - Data: %s",
-                            c.getId(),
-                            c.getClient().getName(),
-                            c.getVehicle().getDescription(),
-                            checkInDate.format(formatter));
+                .map(r -> {
+                    Instant startInstant = r.getStartDate();
+                    Instant endInstant = r.getEndDate();
+
+                    return String.format("Reserva: Cliente: %s - Veículo: %s %s %s - Período: %s à %s",
+                            r.getClient().getName(),
+                            r.getVehicle().getModel(),
+                            r.getVehicle().getBrand(),
+                            r.getVehicle().getYear(),
+                            formatter.format(startInstant),
+                            formatter.format(endInstant));
                 })
                 .toList();
     }
@@ -193,22 +200,78 @@ public class ReservationService {
         return s == null || s.isBlank();
     }
 
-    public Optional<Reservation> getReservationWithHighestAccommodationValue(Long clientId) {
-        List<Reservation> reservations = reservationRepository.findTopByClientIdOrderByVehicleDailyValueDesc(clientId);
-        return reservations.isEmpty() ? Optional.empty() : Optional.of(reservations.get(0));
+    public List<String> activeReservationsReport() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneOffset.UTC);
+        Instant now = Instant.now();
+
+        List<Reservation> active = reservationRepository.findAll().stream()
+                .filter(r -> {
+                    Instant start = r.getStartDate();
+                    Instant end = r.getEndDate();
+                    return !now.isBefore(start) && !now.isAfter(end);
+                })
+                .toList();
+
+        return active.stream()
+                .map(r -> String.format(
+                        "Reserva ativa - Cliente: %s | Veículo: %s %s %s | Período: %s à %s",
+                        r.getClient().getName(),
+                        r.getVehicle().getBrand(),
+                        r.getVehicle().getModel(),
+                        r.getVehicle().getYear(),
+                        formatter.format(r.getStartDate()),
+                        formatter.format(r.getEndDate())))
+                .toList();
     }
 
-    public Optional<Reservation> getReservationWithLowerAccommodationValue(Long clientId) {
-        List<Reservation> reservations = reservationRepository.findTopByClientIdOrderByVehicleDailyValueAsc(clientId);
-        return reservations.isEmpty() ? Optional.empty() : Optional.of(reservations.get(0));
-    }
-
-    public Double getTotalReservationValueByClient(Long clientId) {
-        List<Reservation> reservations = reservationRepository.findByClientId(clientId);
+    public List<String> reservationsPerVehicleReport() {
+        List<Reservation> reservations = reservationRepository.findAll();
 
         return reservations.stream()
-                .mapToDouble(r -> r.getVehicle().getDailyValue())
-                .sum();
+                .collect(
+                        java.util.stream.Collectors.groupingBy(
+                                r -> String.format("%s %s %s",
+                                        r.getVehicle().getBrand(),
+                                        r.getVehicle().getModel(),
+                                        r.getVehicle().getYear()
+                                ),
+                                java.util.stream.Collectors.counting()
+                        )
+                )
+                .entrySet().stream()
+                .map(entry -> String.format("Veículo: %s | Total de reservas: %d", entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    public double calculateRevenueByPeriod(Instant startPeriod, Instant endPeriod) {
+        if (startPeriod == null || endPeriod == null || endPeriod.isBefore(startPeriod)) {
+            throw new IllegalArgumentException("Período inválido.");
+        }
+
+        List<Reservation> reservations = reservationRepository.findAll().stream()
+                .filter(r -> {
+                    Instant start = r.getStartDate();
+                    Instant end = r.getEndDate();
+                    return !(end.isBefore(startPeriod) || start.isAfter(endPeriod));
+                })
+                .toList();
+
+        double totalRevenue = 0.0;
+
+        for (Reservation reservation : reservations) {
+            Vehicle vehicle = reservation.getVehicle();
+            if (vehicle != null && vehicle.getDailyValue() > 0) {
+                Instant effectiveStart = reservation.getStartDate().isBefore(startPeriod) ? startPeriod : reservation.getStartDate();
+                Instant effectiveEnd = reservation.getEndDate().isAfter(endPeriod) ? endPeriod : reservation.getEndDate();
+
+                long days = Math.max(1,
+                        java.time.Duration.between(effectiveStart, effectiveEnd).toDays() + 1);
+
+                totalRevenue += days * vehicle.getDailyValue();
+            }
+        }
+
+        return totalRevenue;
     }
 
 }
