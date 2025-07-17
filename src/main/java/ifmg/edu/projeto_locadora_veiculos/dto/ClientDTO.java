@@ -23,6 +23,7 @@ public class ClientDTO extends RepresentationModel<ClientDTO> {
     private String email;
 
     @Schema(description = "Senha de acesso do cliente")
+    @NotBlank(message = "A senha é obrigatória")
     @Size(min = 6, max = 10, message = "Deve ter entre 6 e 10 caracteres.")
     private String password;
 

@@ -1,7 +1,6 @@
 package ifmg.edu.projeto_locadora_veiculos.services;
 
 import ifmg.edu.projeto_locadora_veiculos.dto.VehicleDTO;
-import ifmg.edu.projeto_locadora_veiculos.entities.Client;
 import ifmg.edu.projeto_locadora_veiculos.entities.Vehicle;
 import ifmg.edu.projeto_locadora_veiculos.repositories.VehicleRepository;
 import ifmg.edu.projeto_locadora_veiculos.services.exceptions.DatabaseException;

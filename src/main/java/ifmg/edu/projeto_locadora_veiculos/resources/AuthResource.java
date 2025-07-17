@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +53,7 @@ public class AuthResource {
                     description = "Dados do novo cliente", required = true,
                     content = @Content(schema = @Schema(implementation = ClientDTO.class))
             )
-            @RequestBody ClientDTO dto) {
+            @Valid @RequestBody ClientDTO dto) {
 
         ClientDTO newClient = clientService.insert(dto);
         URI uri = ServletUriComponentsBuilder
@@ -77,7 +78,7 @@ public class AuthResource {
                     required = true,
                     content = @Content(schema = @Schema(implementation = LoginRequestDTO.class))
             )
-            @RequestBody LoginRequestDTO loginRequest) {
+            @Valid @RequestBody LoginRequestDTO loginRequest) {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
