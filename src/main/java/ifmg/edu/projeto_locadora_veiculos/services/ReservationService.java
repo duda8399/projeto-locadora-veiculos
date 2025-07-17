@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
@@ -184,13 +185,24 @@ public class ReservationService {
 
         double total = 0.0;
         for (Reservation reservation : validReservations) {
-            sb.append("Quarto: ").append(reservation.getVehicle().getDescription());
-            sb.append("    Valor: ").append(String.format("%.2f", reservation.getVehicle().getDailyValue())).append("\n");
-            total += reservation.getVehicle().getDailyValue();
+            long days = ChronoUnit.DAYS.between(
+                    reservation.getStartDate().atZone(ZoneId.systemDefault()).toLocalDate(),
+                    reservation.getEndDate().atZone(ZoneId.systemDefault()).toLocalDate()) + 1;
+
+            double dailyValue = reservation.getVehicle().getDailyValue();
+            double reservationTotal = days * dailyValue;
+
+            sb.append("Veículo: ").append(reservation.getVehicle().getModel())
+                    .append(" | Diárias: ").append(days)
+                    .append(" | Valor diário: R$ ").append(String.format("%.2f", dailyValue))
+                    .append(" | Total: R$ ").append(String.format("%.2f", reservationTotal))
+                    .append("\n");
+
+            total += reservationTotal;
         }
 
         sb.append("===============================\n");
-        sb.append("Total: R$ ").append(String.format("%.2f", total)).append("\n");
+        sb.append("Total geral: R$ ").append(String.format("%.2f", total)).append("\n");
         sb.append("===============================");
 
         return sb.toString();
