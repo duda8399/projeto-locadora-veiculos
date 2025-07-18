@@ -53,7 +53,7 @@ public class AuthResource {
                     description = "Dados do novo cliente", required = true,
                     content = @Content(schema = @Schema(implementation = ClientDTO.class))
             )
-            @Valid @RequestBody ClientDTO dto) {
+            @RequestBody ClientDTO dto) {
 
         ClientDTO newClient = clientService.insert(dto);
         URI uri = ServletUriComponentsBuilder
@@ -78,7 +78,7 @@ public class AuthResource {
                     required = true,
                     content = @Content(schema = @Schema(implementation = LoginRequestDTO.class))
             )
-            @Valid @RequestBody LoginRequestDTO loginRequest) {
+            @RequestBody LoginRequestDTO loginRequest) {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
